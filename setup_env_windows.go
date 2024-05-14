@@ -53,6 +53,7 @@ func platformInitializeEnvironment() error {
 		syscall.FreeLibrary(handle)
 		return fmt.Errorf("Error setting ORT API base: %d", tmp)
 	}
+	C.SetTrainingApi()
 	libraryHandle = handle
 	return nil
 }

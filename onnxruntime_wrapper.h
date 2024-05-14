@@ -14,6 +14,7 @@
 // Next, we actually include the header.
 #undef _WIN32
 #include "onnxruntime_c_api.h"
+#include "onnxruntime_training_c_api.h"
 
 // ... However, mingw will complain if _WIN32 is *not* defined! So redefine it.
 #define _WIN32
@@ -227,6 +228,54 @@ OrtStatus *ModelMetadataGetCustomMetadataMapKeys(OrtModelMetadata *m,
 
 // Wraps ort_api->ModelMetadataGetVersion.
 OrtStatus *ModelMetadataGetVersion(OrtModelMetadata *m, int64_t *version);
+
+// TRAINING API WRAPPER
+
+void SetTrainingApi();
+int IsTrainingApiSupported();
+
+// wraps ort_training_api->CreateSessionFromBuffer.
+// creates and ORT checkpoint from the checkpoint data.
+OrtStatus *CreateCheckpoint(void *checkpoint_data, size_t checkpoint_data_length, OrtCheckpointState **out);
+
+// wraps ort_training_api->CreateTrainingSessionFromBuffer.
+// creates an ORT training session using the given models and checkpoint. 
+// The given options pointer may be NULL; if it is, then we'll use default options.
+OrtStatus *CreateTrainingSessionFromBuffer(OrtCheckpointState *checkpoint_state,
+  void *training_model_data, size_t training_model_data_length,
+  void *eval_model_data, size_t eval_model_data_length,
+  void *optim_model_data, size_t optim_model_data_length,
+  OrtEnv *env, OrtTrainingSession **out, OrtSessionOptions *options);
+
+OrtStatus *CreateTrainingSessionFromPaths(OrtCheckpointState *checkpoint_state,
+    char *training_model_path, char *eval_model_path, char *optim_model_path, 
+    OrtEnv *env, OrtTrainingSession **out, OrtSessionOptions *options);
+
+OrtStatus *TrainingSessionGetInputCount(OrtTrainingSession *training_session, size_t *result_training, size_t *result_eval);
+
+OrtStatus *TrainingSessionGetOutputCount(OrtTrainingSession *training_session, size_t *result_training, size_t *result_eval);
+
+OrtStatus *TrainingSessionGetTrainingInputName(OrtTrainingSession *training_session, size_t i, char **name);
+
+OrtStatus *TrainingSessionGetEvalInputName(OrtTrainingSession *training_session, size_t i, char **name);
+
+OrtStatus *TrainingSessionGetTrainingOutputName(OrtTrainingSession *training_session, size_t i, char **name);
+
+OrtStatus *TrainingSessionGetEvalOutputName(OrtTrainingSession *training_session, size_t i, char **name);
+
+OrtStatus *TrainStep(OrtTrainingSession *training_session, size_t inputs_len, OrtValue **inputs, size_t output_len, OrtValue **outputs);
+
+OrtStatus *OptimizerStep(OrtTrainingSession *training_session);
+
+OrtStatus *LazyResetGrad(OrtTrainingSession *training_session);
+
+OrtStatus *SaveCheckpoint(OrtCheckpointState *checkpoint, char *path, size_t include_optimizer);
+
+OrtStatus *ExportModel(OrtTrainingSession *training_session, char *path, size_t outputs_len, char **output_names);
+
+void ReleaseOrtTrainingSession(OrtTrainingSession *session);
+
+void ReleaseCheckpointState(OrtCheckpointState *checkpoint);
 
 #ifdef __cplusplus
 }  // extern "C"
